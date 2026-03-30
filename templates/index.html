@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spotify Listening History</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        <span>Spotify Stats</span>
+      </div>
+      {% if logged_in %}
+      <div class="user-area">
+        {% if user.images %}
+        <img src="{{ user.images[0].url }}" alt="avatar" class="avatar" />
+        {% endif %}
+        <span class="username">{{ user.display_name }}</span>
+        <a href="/logout" class="btn btn-outline">Log out</a>
+      </div>
+      {% endif %}
+    </div>
+  </header>
+
+  <main>
+    {% if not logged_in %}
+    <div class="login-screen">
+      <div class="login-card">
+        <svg viewBox="0 0 24 24" width="64" height="64" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        <h1>Spotify Listening Stats</h1>
+        <p>Visualize your listening history, top tracks, and top artists.</p>
+        <a href="/login" class="btn btn-green btn-large">Connect with Spotify</a>
+      </div>
+    </div>
+    {% else %}
+    <div class="dashboard">
+
+      <!-- Tab nav -->
+      <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="history">Recent History</button>
+        <button class="tab-btn" data-tab="top-tracks">Top Tracks</button>
+        <button class="tab-btn" data-tab="top-artists">Top Artists</button>
+      </nav>
+
+      <!-- Recent History Tab -->
+      <div id="tab-history" class="tab-content active">
+        <div class="charts-grid">
+          <div class="card">
+            <h2>Listening by Hour of Day</h2>
+            <canvas id="hourChart"></canvas>
+          </div>
+          <div class="card">
+            <h2>Listening by Day of Week</h2>
+            <canvas id="dowChart"></canvas>
+          </div>
+          <div class="card">
+            <h2>Most Played Artists (Recent)</h2>
+            <canvas id="artistChart"></canvas>
+          </div>
+          <div class="card">
+            <h2>Activity Over Last Days</h2>
+            <canvas id="dailyChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card full-width">
+          <h2>Recently Played Tracks</h2>
+          <div id="track-list" class="track-list">
+            <div class="loading">Loading...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Tracks Tab -->
+      <div id="tab-top-tracks" class="tab-content">
+        <div class="time-range-selector">
+          <label>Time range:</label>
+          <button class="range-btn active" data-range="short_term">Last 4 weeks</button>
+          <button class="range-btn" data-range="medium_term">Last 6 months</button>
+          <button class="range-btn" data-range="long_term">All time</button>
+        </div>
+        <div class="charts-grid">
+          <div class="card">
+            <h2>Top Tracks by Popularity</h2>
+            <canvas id="topTracksChart"></canvas>
+          </div>
+          <div class="card full-width">
+            <div id="top-tracks-list" class="ranked-list">
+              <div class="loading">Loading...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Artists Tab -->
+      <div id="tab-top-artists" class="tab-content">
+        <div class="time-range-selector">
+          <label>Time range:</label>
+          <button class="range-btn active" data-range="short_term">Last 4 weeks</button>
+          <button class="range-btn" data-range="medium_term">Last 6 months</button>
+          <button class="range-btn" data-range="long_term">All time</button>
+        </div>
+        <div class="charts-grid">
+          <div class="card">
+            <h2>Top Artists by Popularity</h2>
+            <canvas id="topArtistsChart"></canvas>
+          </div>
+          <div class="card full-width">
+            <div id="top-artists-list" class="ranked-list">
+              <div class="loading">Loading...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    {% endif %}
+  </main>
+
+  {% if logged_in %}
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+  {% endif %}
+</body>
+</html>
