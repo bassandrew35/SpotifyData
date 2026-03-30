@@ -97,7 +97,47 @@ header {
 }
 .login-card svg { margin-bottom: 20px; }
 .login-card h1 { font-size: 1.6rem; margin-bottom: 12px; }
-.login-card p { color: var(--text-muted); margin-bottom: 32px; }
+.login-card p { color: var(--text-muted); margin-bottom: 24px; }
+
+.credentials-form { display: flex; flex-direction: column; gap: 16px; text-align: left; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+.form-group input {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.95rem;
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-group input:focus { border-color: var(--green); }
+.form-group input::placeholder { color: #555; }
+
+.redirect-hint {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.82rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hint-label { color: var(--text-muted); }
+.redirect-hint code {
+  color: var(--green);
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.btn-full { width: 100%; text-align: center; margin-top: 4px; }
+.setup-help { font-size: 0.82rem; color: var(--text-muted); margin-top: 16px; margin-bottom: 0; }
+.setup-help a { color: var(--green); text-decoration: none; }
+.setup-help a:hover { text-decoration: underline; }
+.back-link { display: block; margin-top: 16px; font-size: 0.85rem; color: var(--text-muted); text-decoration: none; }
+.back-link:hover { color: var(--text); }
 
 /* Dashboard */
 .dashboard {

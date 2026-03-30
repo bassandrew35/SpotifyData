@@ -16,27 +16,7 @@ A web app that visualizes your Spotify listening history, top tracks, and top ar
 2. In the app settings, add `http://127.0.0.1:5000/callback` as a **Redirect URI** and save.
 3. Copy your **Client ID** and **Client Secret**.
 
-### 2. Configure environment variables
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and fill in your credentials:
-
-```
-SPOTIPY_CLIENT_ID=your_client_id
-SPOTIPY_CLIENT_SECRET=your_client_secret
-SPOTIPY_REDIRECT_URI=http://127.0.0.1:5000/callback
-FLASK_SECRET_KEY=any_random_string
-```
-
-To generate a secure `FLASK_SECRET_KEY`:
-```bash
-python3 -c "import secrets; print(secrets.token_hex(32))"
-```
-
-### 3. Install dependencies
+### 2. Install dependencies
 
 ```bash
 python3 -m venv venv
@@ -44,14 +24,20 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Run the app
+### 3. Run the app
 
 ```bash
 source venv/bin/activate
 python app.py
 ```
 
-Open `http://127.0.0.1:5000` in your browser and click **Connect with Spotify**.
+### 4. Enter your credentials
+
+Open `http://127.0.0.1:5000` in your browser. You will be prompted to enter your **Client ID** and **Client Secret** from the Spotify Developer Dashboard. The exact redirect URI you need to register is shown on that screen.
+
+Once submitted, click **Connect with Spotify** to authorize the app and view your stats.
+
+To switch to a different Spotify account or app, click **Change credentials** in the top right corner.
 
 ## Tech Stack
 

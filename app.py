@@ -1,6 +1,5 @@
 import os
-from collections import Counter, defaultdict
-from datetime import datetime, timezone
+from datetime import datetime
 
 import spotipy
 from dotenv import load_dotenv
@@ -16,11 +15,23 @@ SCOPE = "user-read-recently-played user-top-read user-read-playback-state"
 CACHE_PATH = ".spotify_cache"
 
 
+def get_redirect_uri():
+    return url_for("callback", _external=True)
+
+
+def get_credentials():
+    """Return (client_id, client_secret) from session, falling back to env vars."""
+    client_id = session.get("client_id") or os.getenv("SPOTIPY_CLIENT_ID")
+    client_secret = session.get("client_secret") or os.getenv("SPOTIPY_CLIENT_SECRET")
+    return client_id, client_secret
+
+
 def get_spotify_oauth():
+    client_id, client_secret = get_credentials()
     return SpotifyOAuth(
-        client_id=os.getenv("SPOTIPY_CLIENT_ID"),
-        client_secret=os.getenv("SPOTIPY_CLIENT_SECRET"),
-        redirect_uri=os.getenv("SPOTIPY_REDIRECT_URI", "http://localhost:5000/callback"),
+        client_id=client_id,
+        client_secret=client_secret,
+        redirect_uri=get_redirect_uri(),
         scope=SCOPE,
         cache_path=CACHE_PATH,
         show_dialog=True,
@@ -40,11 +51,35 @@ def get_spotify_client():
 
 @app.route("/")
 def index():
+    client_id, client_secret = get_credentials()
+    configured = bool(client_id and client_secret)
+
+    if not configured:
+        return render_template("index.html", state="setup", redirect_uri=get_redirect_uri())
+
     sp = get_spotify_client()
     if not sp:
-        return render_template("index.html", logged_in=False)
+        return render_template("index.html", state="login", redirect_uri=get_redirect_uri())
+
     user = sp.current_user()
-    return render_template("index.html", logged_in=True, user=user)
+    return render_template("index.html", state="dashboard", user=user)
+
+
+@app.route("/setup", methods=["POST"])
+def setup():
+    session["client_id"] = request.form.get("client_id", "").strip()
+    session["client_secret"] = request.form.get("client_secret", "").strip()
+    return redirect(url_for("index"))
+
+
+@app.route("/clear-credentials")
+def clear_credentials():
+    session.pop("client_id", None)
+    session.pop("client_secret", None)
+    session.pop("token_info", None)
+    if os.path.exists(CACHE_PATH):
+        os.remove(CACHE_PATH)
+    return redirect(url_for("index"))
 
 
 @app.route("/login")
@@ -65,7 +100,7 @@ def callback():
 
 @app.route("/logout")
 def logout():
-    session.clear()
+    session.pop("token_info", None)
     if os.path.exists(CACHE_PATH):
         os.remove(CACHE_PATH)
     return redirect(url_for("index"))
