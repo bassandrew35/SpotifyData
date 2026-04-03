@@ -117,7 +117,7 @@ function horizontalBarConfig(labels, data, label, xLabel) {
 }
 
 // ── Recently Played ──────────────────────────────────────────────────────────
-let hourChart, dowChart, artistChart, dailyChart;
+let hourChart, artistChart;
 
 async function loadRecentHistory() {
   const res = await fetch("/api/recently-played");
@@ -133,62 +133,12 @@ async function loadRecentHistory() {
   if (hourChart) hourChart.destroy();
   hourChart = new Chart(document.getElementById("hourChart"), barChartConfig(hourLabels, hourCounts, "Plays", "Number of plays"));
 
-  // Day of week
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  const dowCounts = Object.fromEntries(days.map((d) => [d, 0]));
-  tracks.forEach((t) => { if (dowCounts[t.day_of_week] !== undefined) dowCounts[t.day_of_week]++; });
-  if (dowChart) dowChart.destroy();
-  dowChart = new Chart(document.getElementById("dowChart"), barChartConfig(days.map((d) => d.slice(0, 3)), days.map((d) => dowCounts[d]), "Plays", "Number of plays"));
-
   // Top artists from recent plays
   const artistCounts = {};
   tracks.forEach((t) => { artistCounts[t.artist] = (artistCounts[t.artist] || 0) + 1; });
   const topArtists = Object.entries(artistCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
   if (artistChart) artistChart.destroy();
   artistChart = new Chart(document.getElementById("artistChart"), horizontalBarConfig(topArtists.map((a) => a[0]), topArtists.map((a) => a[1]), "Plays", "Number of plays"));
-
-  // Activity over days
-  const dayCounts = {};
-  tracks.forEach((t) => { dayCounts[t.day] = (dayCounts[t.day] || 0) + 1; });
-  const sortedDays = Object.keys(dayCounts).sort();
-  const dayLabels = sortedDays.map((d) => new Date(d + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }));
-  if (dailyChart) dailyChart.destroy();
-  dailyChart = new Chart(document.getElementById("dailyChart"), {
-    type: "line",
-    data: {
-      labels: dayLabels,
-      datasets: [{
-        label: "Plays",
-        data: sortedDays.map((d) => dayCounts[d]),
-        borderColor: GREEN,
-        backgroundColor: GREEN_ALPHA,
-        fill: true,
-        tension: 0.3,
-        pointRadius: 4,
-        pointBackgroundColor: GREEN,
-      }],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => ` ${ctx.parsed.y} plays`,
-          },
-        },
-      },
-      scales: {
-        x: { grid: { color: "rgba(255,255,255,0.05)" } },
-        y: {
-          grid: { color: "rgba(255,255,255,0.05)" },
-          beginAtZero: true,
-          ticks: { precision: 0 },
-          title: AXIS_TITLE("Number of plays"),
-        },
-      },
-    },
-  });
 
   // Track list
   const list = document.getElementById("track-list");

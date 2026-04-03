@@ -4,7 +4,7 @@ A web app that visualizes your Spotify listening history, top tracks, and top ar
 
 ## Features
 
-- **Recent History** — Charts showing your listening patterns by hour of day, day of week, most played artists, and activity over the past days. Includes a scrollable list of your 50 most recently played tracks.
+- **Recent History** — Charts showing your listening patterns by hour of day and most played artists. Includes a scrollable list of your 50 most recently played tracks.
 - **Top Tracks** — Your top 20 tracks ranked by Spotify, with a popularity chart. Switchable between last 4 weeks, last 6 months, and all time.
 - **Top Artists** — Your top 20 artists ranked by Spotify, with genres and popularity. Same time range options as top tracks.
 
