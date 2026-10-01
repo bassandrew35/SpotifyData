@@ -44,3 +44,9 @@ To switch to a different Spotify account or app, click **Change credentials** in
 - **Backend:** Python, Flask, Spotipy
 - **Frontend:** HTML/CSS, Chart.js
 - **Auth:** Spotify OAuth 2.0
+
+## GitHub Actions Deployment
+
+The workflow in `.github/workflows/ci-cd.yml` runs the app's smoke tests for pull requests and pushes to `main`. A successful push to `main` is deployed to Railway.
+
+To enable deployment, add a Railway project token as the `RAILWAY_TOKEN` GitHub Actions secret and set the `RAILWAY_SERVICE_NAME` repository variable to the target Railway service name. The Railway project token selects the project and environment. Set `SPOTIPY_CLIENT_ID`, `SPOTIPY_CLIENT_SECRET`, and `FLASK_SECRET_KEY` as Railway service variables; use the deployed app's `/callback` URL as the Spotify redirect URI.
