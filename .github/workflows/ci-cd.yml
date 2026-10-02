@@ -24,19 +24,49 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - run: npm install --global @railway/cli
-      - name: Deploy to Railway
+      - name: Validate AWS deployment settings
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_SERVICE_NAME: ${{ vars.RAILWAY_SERVICE_NAME }}
+          AWS_ROLE_TO_ASSUME: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          EB_APPLICATION_NAME: ${{ vars.EB_APPLICATION_NAME }}
+          EB_ENVIRONMENT_NAME: ${{ vars.EB_ENVIRONMENT_NAME }}
+          EB_S3_BUCKET: ${{ vars.EB_S3_BUCKET }}
         run: |
-          if [ -z "$RAILWAY_TOKEN" ] || [ -z "$RAILWAY_SERVICE_NAME" ]; then
-            echo "Configure RAILWAY_TOKEN and RAILWAY_SERVICE_NAME in GitHub repository settings."
+          if [ -z "$AWS_ROLE_TO_ASSUME" ] || [ -z "$AWS_REGION" ] || \
+             [ -z "$EB_APPLICATION_NAME" ] || [ -z "$EB_ENVIRONMENT_NAME" ] || \
+             [ -z "$EB_S3_BUCKET" ]; then
+            echo "Configure AWS_ROLE_TO_ASSUME, AWS_REGION, EB_APPLICATION_NAME, EB_ENVIRONMENT_NAME, and EB_S3_BUCKET as GitHub repository variables."
             exit 1
           fi
-          railway up --service "$RAILWAY_SERVICE_NAME" --ci
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Deploy to Elastic Beanstalk
+        env:
+          EB_APPLICATION_NAME: ${{ vars.EB_APPLICATION_NAME }}
+          EB_ENVIRONMENT_NAME: ${{ vars.EB_ENVIRONMENT_NAME }}
+          EB_S3_BUCKET: ${{ vars.EB_S3_BUCKET }}
+        run: |
+          set -euo pipefail
+          version_label="github-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          s3_key="source-bundles/${version_label}.zip"
+
+          git archive --format=zip --output="$RUNNER_TEMP/source.zip" "$GITHUB_SHA"
+          aws s3 cp "$RUNNER_TEMP/source.zip" "s3://${EB_S3_BUCKET}/${s3_key}"
+          aws elasticbeanstalk create-application-version \
+            --application-name "$EB_APPLICATION_NAME" \
+            --version-label "$version_label" \
+            --source-bundle "S3Bucket=${EB_S3_BUCKET},S3Key=${s3_key}" \
+            --process
+          aws elasticbeanstalk update-environment \
+            --environment-name "$EB_ENVIRONMENT_NAME" \
+            --version-label "$version_label"
+          aws elasticbeanstalk wait environment-updated \
+            --environment-names "$EB_ENVIRONMENT_NAME"

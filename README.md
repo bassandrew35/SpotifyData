@@ -45,8 +45,19 @@ To switch to a different Spotify account or app, click **Change credentials** in
 - **Frontend:** HTML/CSS, Chart.js
 - **Auth:** Spotify OAuth 2.0
 
-## GitHub Actions Deployment
+## GitHub Actions Deployment to AWS
 
-The workflow in `.github/workflows/ci-cd.yml` runs the app's smoke tests for pull requests and pushes to `main`. A successful push to `main` is deployed to Railway.
+The workflow in `.github/workflows/ci-cd.yml` runs the app's smoke tests for pull requests and pushes to `main`. A successful push to `main` is packaged and deployed to the configured AWS Elastic Beanstalk environment. The Python platform installs dependencies from `requirements.txt` and runs Gunicorn on port 8000 as specified in the `Procfile`.
 
-To enable deployment, add a Railway project token as the `RAILWAY_TOKEN` GitHub Actions secret and set the `RAILWAY_SERVICE_NAME` repository variable to the target Railway service name. The Railway project token selects the project and environment. Set `SPOTIPY_CLIENT_ID`, `SPOTIPY_CLIENT_SECRET`, and `FLASK_SECRET_KEY` as Railway service variables; use the deployed app's `/callback` URL as the Spotify redirect URI.
+To enable deployment:
+
+1. Create an Elastic Beanstalk application and Python environment, plus an S3 bucket in the same AWS region for deployment bundles.
+2. Create an IAM role trusted by GitHub Actions through OpenID Connect (OIDC), restricted to this repository's `main` branch. Grant it permission to upload objects to the deployment bucket and create application versions, update the environment, and describe the environment in Elastic Beanstalk. Also allow the Elastic Beanstalk environment's service role to read objects from the deployment bucket.
+3. Add these repository variables in GitHub settings:
+	- `AWS_ROLE_TO_ASSUME`: the IAM role ARN.
+	- `AWS_REGION`: the region containing the Elastic Beanstalk environment and S3 bucket.
+	- `EB_APPLICATION_NAME`: the Elastic Beanstalk application name.
+	- `EB_ENVIRONMENT_NAME`: the Elastic Beanstalk environment name.
+	- `EB_S3_BUCKET`: the deployment bundle bucket name.
+4. Set `SPOTIPY_CLIENT_ID`, `SPOTIPY_CLIENT_SECRET`, and `FLASK_SECRET_KEY` as environment properties for the Elastic Beanstalk environment.
+5. Configure HTTPS for the environment and register its HTTPS `/callback` URL as a Spotify redirect URI.

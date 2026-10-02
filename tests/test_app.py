@@ -16,6 +16,12 @@ class AppRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Enter your Spotify app credentials", response.data)
 
+    def test_setup_redirect_uri_uses_forwarded_https_scheme(self):
+        with patch("app.get_credentials", return_value=(None, None)):
+            response = self.client.get("/", headers={"X-Forwarded-Proto": "https"})
+
+        self.assertIn(b"https://localhost/callback", response.data)
+
     def test_recently_played_requires_authentication(self):
         with patch("app.get_spotify_client", return_value=None):
             response = self.client.get("/api/recently-played")

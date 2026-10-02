@@ -5,10 +5,12 @@ import spotipy
 from dotenv import load_dotenv
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 from spotipy.oauth2 import SpotifyOAuth
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 load_dotenv()
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-key")
 
 SCOPE = "user-read-recently-played user-top-read user-read-playback-state"
