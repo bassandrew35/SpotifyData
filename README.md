@@ -39,6 +39,24 @@ Once submitted, click **Connect with Spotify** to authorize the app and view you
 
 To switch to a different Spotify account or app, click **Change credentials** in the top right corner.
 
+### Optional: configure credentials with environment variables
+
+Instead of entering credentials in the browser, you can set these values in your shell or a `.env` file before starting the app:
+
+```bash
+export SPOTIPY_CLIENT_ID="your-client-id"
+export SPOTIPY_CLIENT_SECRET="your-client-secret"
+export FLASK_SECRET_KEY="your-secret-key"
+```
+
+The app will use these automatically when present. This is also useful for deployed environments such as Elastic Beanstalk.
+
+### Troubleshooting
+
+- If Spotify login fails after switching apps or accounts, use **Change credentials** or **Log out** in the top-right menu to clear the saved session and cached token data.
+- If the redirect URI does not match, confirm the exact callback URL shown in the app and register that value in the Spotify Developer Dashboard.
+- If you are testing locally, make sure the app is running on `http://127.0.0.1:5000` and that the same URL is registered in your Spotify app settings.
+
 ## Tech Stack
 
 - **Backend:** Python, Flask, Spotipy
